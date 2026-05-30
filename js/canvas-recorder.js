@@ -1,20 +1,27 @@
 /*
 ====================================================
-SHORTS / REEL TOOL
-CANVAS RECORDER
+SHORTS / REEL CREATOR PRO
+FINAL INTEGRATED CANVAS RECORDER
 js/canvas-recorder.js
 ====================================================
+
+Compatible With:
+
+✔ VideoEngine
+✔ TimelineEngine
+✔ SubtitleEngine
+✔ EffectsEngine
+✔ ExportEngine
 
 Features:
 
 ✔ 9:16 Reel Preview
-✔ Video Rendering
-✔ Text Overlay
+✔ Real Video Rendering
+✔ Subtitle Rendering
 ✔ Effects Rendering
+✔ Recording Support
 ✔ Scene Transition
-✔ Canvas Recording
 ✔ Mobile Friendly
-✔ WebM Export
 
 ====================================================
 */
@@ -23,36 +30,25 @@ window.CanvasRecorder = (() => {
 
   /*
   ====================================================
-  INTERNAL STATE
+  STATE
   ====================================================
   */
 
   let canvas = null;
   let ctx = null;
 
-  let previewContainer =
-    null;
+  let previewCanvas = null;
+  let previewCtx = null;
 
-  let previewCanvas =
-    null;
+  let previewElement = null;
 
-  let previewCtx =
-    null;
+  let animationFrame = null;
 
-  let animationFrame =
-    null;
+  let currentVideo = null;
 
-  let currentVideo =
-    null;
+  let mediaRecorder = null;
 
-  let currentText =
-    "";
-
-  let mediaRecorder =
-    null;
-
-  let recordedChunks =
-    [];
+  let recordedChunks = [];
 
   /*
   ====================================================
@@ -60,11 +56,9 @@ window.CanvasRecorder = (() => {
   ====================================================
   */
 
-  const WIDTH =
-    1080;
+  const WIDTH = 1080;
 
-  const HEIGHT =
-    1920;
+  const HEIGHT = 1920;
 
   /*
   ====================================================
@@ -72,15 +66,21 @@ window.CanvasRecorder = (() => {
   ====================================================
   */
 
-  async function initialize(
-    config
-  ) {
+  async function initialize(config) {
 
     canvas =
       config.canvas;
 
-    previewContainer =
+    previewElement =
       config.previewElement;
+
+    if (!canvas) {
+
+      throw new Error(
+        "Canvas missing."
+      );
+
+    }
 
     canvas.width =
       WIDTH;
@@ -99,36 +99,47 @@ window.CanvasRecorder = (() => {
     ================================================
     */
 
-    previewContainer.innerHTML =
-      "";
+    if (previewElement) {
 
-    previewCanvas =
-      document.createElement(
-        "canvas"
+      previewElement.innerHTML =
+        "";
+
+      previewCanvas =
+        document.createElement(
+          "canvas"
+        );
+
+      previewCanvas.width =
+        WIDTH;
+
+      previewCanvas.height =
+        HEIGHT;
+
+      previewCanvas.style.width =
+        "100%";
+
+      previewCanvas.style.height =
+        "100%";
+
+      previewCanvas.style.display =
+        "block";
+
+      previewElement.appendChild(
+        previewCanvas
       );
 
-    previewCanvas.width =
-      WIDTH;
+      previewCtx =
+        previewCanvas.getContext(
+          "2d"
+        );
 
-    previewCanvas.height =
-      HEIGHT;
-
-    previewCanvas.style.width =
-      "100%";
-
-    previewCanvas.style.height =
-      "100%";
-
-    previewContainer.appendChild(
-      previewCanvas
-    );
-
-    previewCtx =
-      previewCanvas.getContext(
-        "2d"
-      );
+    }
 
     startRenderLoop();
+
+    console.log(
+      "CanvasRecorder Ready"
+    );
 
   }
 
@@ -143,7 +154,7 @@ window.CanvasRecorder = (() => {
   ) {
 
     currentVideo =
-      config.video;
+      config.video || null;
 
   }
 
@@ -157,8 +168,16 @@ window.CanvasRecorder = (() => {
     config
   ) {
 
-    currentText =
-      config.text || "";
+    if (
+      window.SubtitleEngine
+    ) {
+
+      window.SubtitleEngine
+        .setText(
+          config.text || ""
+        );
+
+    }
 
   }
 
@@ -174,17 +193,16 @@ window.CanvasRecorder = (() => {
       animationFrame
     );
 
-    const loop =
-      () => {
+    const loop = () => {
 
-        drawFrame();
+      drawFrame();
 
-        animationFrame =
-          requestAnimationFrame(
-            loop
-          );
+      animationFrame =
+        requestAnimationFrame(
+          loop
+        );
 
-      };
+    };
 
     loop();
 
@@ -242,7 +260,11 @@ window.CanvasRecorder = (() => {
     */
 
     if (
-      window.EffectsEngine
+      window.EffectsEngine &&
+      typeof window
+        .EffectsEngine
+        .draw ===
+      "function"
     ) {
 
       window.EffectsEngine.draw(
@@ -255,11 +277,25 @@ window.CanvasRecorder = (() => {
 
     /*
     ================================================
-    TEXT
+    SUBTITLES
     ================================================
     */
 
-    drawText();
+    if (
+      window.SubtitleEngine &&
+      typeof window
+        .SubtitleEngine
+        .draw ===
+      "function"
+    ) {
+
+      window.SubtitleEngine.draw(
+        ctx,
+        WIDTH,
+        HEIGHT
+      );
+
+    }
 
     /*
     ================================================
@@ -267,7 +303,10 @@ window.CanvasRecorder = (() => {
     ================================================
     */
 
-    if (previewCtx) {
+    if (
+      previewCtx &&
+      previewCanvas
+    ) {
 
       previewCtx.clearRect(
         0,
@@ -296,6 +335,15 @@ window.CanvasRecorder = (() => {
 
     if (
       !currentVideo
+    ) {
+
+      return;
+
+    }
+
+    if (
+      !currentVideo.videoWidth ||
+      !currentVideo.videoHeight
     ) {
 
       return;
@@ -361,248 +409,13 @@ window.CanvasRecorder = (() => {
 
     }
 
-    catch (
-      error
-    ) {
+    catch (error) {
 
       console.warn(
         error
       );
 
     }
-
-  }
-
-  /*
-  ====================================================
-  DRAW TEXT
-  ====================================================
-  */
-
-  function drawText() {
-
-    if (
-      !currentText
-    ) {
-
-      return;
-
-    }
-
-    const boxHeight =
-      320;
-
-    const boxY =
-      HEIGHT -
-      boxHeight -
-      80;
-
-    /*
-    ================================================
-    GLASS BOX
-    ================================================
-    */
-
-    ctx.save();
-
-    ctx.fillStyle =
-      "rgba(0,0,0,0.45)";
-
-    roundRect(
-      ctx,
-      60,
-      boxY,
-      WIDTH - 120,
-      boxHeight,
-      40
-    );
-
-    ctx.fill();
-
-    /*
-    ================================================
-    TEXT STYLE
-    ================================================
-    */
-
-    ctx.fillStyle =
-      "#ffffff";
-
-    ctx.textAlign =
-      "center";
-
-    ctx.font =
-      "bold 56px Arial";
-
-    const lines =
-      wrapText(
-        currentText,
-        26
-      );
-
-    let y =
-      boxY + 90;
-
-    lines.forEach(
-      (line) => {
-
-        ctx.fillText(
-          line,
-          WIDTH / 2,
-          y
-        );
-
-        y += 72;
-
-      }
-    );
-
-    ctx.restore();
-
-  }
-
-  /*
-  ====================================================
-  WRAP TEXT
-  ====================================================
-  */
-
-  function wrapText(
-    text,
-    maxLength
-  ) {
-
-    const words =
-      text.split(
-        " "
-      );
-
-    const lines =
-      [];
-
-    let current =
-      "";
-
-    words.forEach(
-      (word) => {
-
-        const test =
-          current +
-          word +
-          " ";
-
-        if (
-          test.length >
-          maxLength
-        ) {
-
-          lines.push(
-            current.trim()
-          );
-
-          current =
-            word + " ";
-
-        }
-
-        else {
-
-          current =
-            test;
-
-        }
-
-      }
-    );
-
-    if (
-      current.trim()
-    ) {
-
-      lines.push(
-        current.trim()
-      );
-
-    }
-
-    return lines.slice(
-      0,
-      4
-    );
-
-  }
-
-  /*
-  ====================================================
-  ROUND RECT
-  ====================================================
-  */
-
-  function roundRect(
-    ctx,
-    x,
-    y,
-    width,
-    height,
-    radius
-  ) {
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      x + radius,
-      y
-    );
-
-    ctx.lineTo(
-      x + width - radius,
-      y
-    );
-
-    ctx.quadraticCurveTo(
-      x + width,
-      y,
-      x + width,
-      y + radius
-    );
-
-    ctx.lineTo(
-      x + width,
-      y + height - radius
-    );
-
-    ctx.quadraticCurveTo(
-      x + width,
-      y + height,
-      x + width - radius,
-      y + height
-    );
-
-    ctx.lineTo(
-      x + radius,
-      y + height
-    );
-
-    ctx.quadraticCurveTo(
-      x,
-      y + height,
-      x,
-      y + height - radius
-    );
-
-    ctx.lineTo(
-      x,
-      y + radius
-    );
-
-    ctx.quadraticCurveTo(
-      x,
-      y,
-      x + radius,
-      y
-    );
-
-    ctx.closePath();
 
   }
 
@@ -619,12 +432,15 @@ window.CanvasRecorder = (() => {
         30
       );
 
-    recordedChunks =
-      [];
+    recordedChunks = [];
 
     mediaRecorder =
       new MediaRecorder(
-        stream
+        stream,
+        {
+          mimeType:
+            "video/webm"
+        }
       );
 
     mediaRecorder.ondataavailable =
@@ -644,6 +460,10 @@ window.CanvasRecorder = (() => {
       };
 
     mediaRecorder.start();
+
+    console.log(
+      "Recording Started"
+    );
 
   }
 
@@ -673,19 +493,17 @@ window.CanvasRecorder = (() => {
         mediaRecorder.onstop =
           () => {
 
-            resolve(
-
+            const blob =
               new Blob(
-
                 recordedChunks,
-
                 {
                   type:
                     "video/webm"
                 }
+              );
 
-              )
-
+            resolve(
+              blob
             );
 
           };
@@ -708,10 +526,43 @@ window.CanvasRecorder = (() => {
     return new Promise(
       (resolve) => {
 
-        setTimeout(
-          resolve,
-          500
-        );
+        let opacity = 0;
+
+        const fade = () => {
+
+          opacity += 0.08;
+
+          ctx.save();
+
+          ctx.fillStyle =
+            `rgba(0,0,0,${opacity})`;
+
+          ctx.fillRect(
+            0,
+            0,
+            WIDTH,
+            HEIGHT
+          );
+
+          ctx.restore();
+
+          if (
+            opacity >= 1
+          ) {
+
+            resolve();
+
+            return;
+
+          }
+
+          requestAnimationFrame(
+            fade
+          );
+
+        };
+
+        fade();
 
       }
     );
@@ -728,6 +579,16 @@ window.CanvasRecorder = (() => {
 
     cancelAnimationFrame(
       animationFrame
+    );
+
+    animationFrame =
+      null;
+
+    currentVideo =
+      null;
+
+    console.log(
+      "Canvas Finalized"
     );
 
   }
