@@ -1,0 +1,720 @@
+/*
+====================================================
+SHORTS / REEL CREATOR PRO
+STYLE SHEET
+css/style.css
+====================================================
+*/
+
+/*
+====================================================
+ROOT
+====================================================
+*/
+
+:root {
+
+  --bg:
+    #0f1117;
+
+  --panel:
+    #171b24;
+
+  --card:
+    #1d2330;
+
+  --border:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  --text:
+    #ffffff;
+
+  --muted:
+    #b5bfd4;
+
+  --primary:
+    #4f8cff;
+
+  --success:
+    #16c784;
+
+  --danger:
+    #ff5f57;
+
+  --shadow:
+    0 12px 35px
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+
+  --radius:
+    18px;
+
+}
+
+/*
+====================================================
+RESET
+====================================================
+*/
+
+* {
+
+  margin: 0;
+
+  padding: 0;
+
+  box-sizing: border-box;
+
+}
+
+html {
+
+  font-size: 16px;
+
+  scroll-behavior: smooth;
+
+}
+
+body {
+
+  min-height: 100vh;
+
+  background:
+    var(--bg);
+
+  color:
+    var(--text);
+
+  font-family:
+    Inter,
+    Poppins,
+    Arial,
+    sans-serif;
+
+  overflow-x: hidden;
+
+}
+
+/*
+====================================================
+APP SHELL
+====================================================
+*/
+
+.app-shell {
+
+  width: 100%;
+
+  max-width: 1700px;
+
+  margin: 0 auto;
+
+  padding: 20px;
+
+}
+
+/*
+====================================================
+HEADER
+====================================================
+*/
+
+.app-header {
+
+  text-align: center;
+
+  margin-bottom: 24px;
+
+}
+
+.app-title {
+
+  font-size: 2rem;
+
+  font-weight: 700;
+
+  margin-bottom: 8px;
+
+}
+
+.app-subtitle {
+
+  color:
+    var(--muted);
+
+  font-size: 0.95rem;
+
+}
+
+/*
+====================================================
+MAIN
+====================================================
+*/
+
+.app-main {
+
+  display: grid;
+
+  grid-template-columns:
+    420px
+    1fr;
+
+  gap: 20px;
+
+  align-items: start;
+
+}
+
+/*
+====================================================
+PANELS
+====================================================
+*/
+
+.editor-panel,
+.preview-panel {
+
+  background:
+    var(--panel);
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    var(--radius);
+
+  box-shadow:
+    var(--shadow);
+
+  padding: 20px;
+
+}
+
+.panel-heading {
+
+  margin-bottom: 18px;
+
+}
+
+.panel-heading h2 {
+
+  font-size: 1.15rem;
+
+  font-weight: 700;
+
+}
+
+/*
+====================================================
+SCENES
+====================================================
+*/
+
+.scene-container {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+
+  margin-bottom: 18px;
+
+}
+
+.scene-card {
+
+  background:
+    var(--card);
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    16px;
+
+  padding: 16px;
+
+}
+
+.scene-topbar {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 16px;
+
+}
+
+.scene-title {
+
+  font-weight: 700;
+
+  font-size: 1rem;
+
+}
+
+.scene-remove-btn {
+
+  border: none;
+
+  cursor: pointer;
+
+  border-radius: 10px;
+
+  padding:
+    8px
+    14px;
+
+  background:
+    rgba(
+      255,
+      95,
+      87,
+      0.18
+    );
+
+  color:
+    #ff8f89;
+
+}
+
+.scene-field {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin-bottom: 14px;
+
+}
+
+.scene-field label {
+
+  font-size: 0.9rem;
+
+  color:
+    var(--muted);
+
+}
+
+/*
+====================================================
+INPUTS
+====================================================
+*/
+
+input[type="text"],
+input[type="file"],
+textarea,
+select {
+
+  width: 100%;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius: 12px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.04
+    );
+
+  color:
+    var(--text);
+
+  padding: 12px;
+
+  outline: none;
+
+}
+
+textarea {
+
+  min-height: 120px;
+
+  resize: vertical;
+
+  line-height: 1.6;
+
+}
+
+textarea::placeholder,
+input::placeholder {
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.45
+    );
+
+}
+
+select {
+
+  cursor: pointer;
+
+}
+
+/*
+====================================================
+SCENE PREVIEW
+====================================================
+*/
+
+.scene-preview {
+
+  overflow: hidden;
+
+  border-radius: 12px;
+
+  background:
+    #090b10;
+
+  border:
+    1px solid
+    var(--border);
+
+}
+
+.scene-preview video {
+
+  display: block;
+
+  width: 100%;
+
+  aspect-ratio:
+    9 / 16;
+
+  object-fit: cover;
+
+  background:
+    black;
+
+}
+
+/*
+====================================================
+BUTTONS
+====================================================
+*/
+
+.primary-btn,
+.success-btn,
+.danger-btn {
+
+  border: none;
+
+  cursor: pointer;
+
+  border-radius: 14px;
+
+  padding:
+    14px
+    18px;
+
+  font-size: 0.95rem;
+
+  font-weight: 600;
+
+  transition:
+    transform
+    0.2s ease,
+    opacity
+    0.2s ease;
+
+}
+
+.primary-btn:hover,
+.success-btn:hover,
+.danger-btn:hover {
+
+  transform:
+    translateY(-2px);
+
+}
+
+.primary-btn {
+
+  background:
+    var(--primary);
+
+  color:
+    white;
+
+}
+
+.success-btn {
+
+  background:
+    var(--success);
+
+  color:
+    white;
+
+}
+
+.danger-btn {
+
+  background:
+    var(--danger);
+
+  color:
+    white;
+
+}
+
+/*
+====================================================
+PREVIEW
+====================================================
+*/
+
+.cinematic-preview {
+
+  position: relative;
+
+  width: 100%;
+
+  max-width: 420px;
+
+  margin: 0 auto;
+
+  aspect-ratio:
+    9 / 16;
+
+  overflow: hidden;
+
+  border-radius: 24px;
+
+  background:
+    #000;
+
+  border:
+    1px solid
+    var(--border);
+
+  box-shadow:
+    0 20px 50px
+    rgba(
+      0,
+      0,
+      0,
+      0.4
+    );
+
+}
+
+#renderCanvas {
+
+  width: 100%;
+
+  height: 100%;
+
+  display: block;
+
+}
+
+/*
+====================================================
+SETTINGS
+====================================================
+*/
+
+.settings-card {
+
+  margin-top: 20px;
+
+  padding: 16px;
+
+  border-radius: 16px;
+
+  background:
+    var(--card);
+
+  border:
+    1px solid
+    var(--border);
+
+}
+
+.setting-row {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+}
+
+/*
+====================================================
+CONTROLS
+====================================================
+*/
+
+.controls {
+
+  margin-top: 20px;
+
+  display: grid;
+
+  gap: 12px;
+
+}
+
+/*
+====================================================
+PLAYBACK MODE
+====================================================
+*/
+
+.playback-mode .editor-panel {
+
+  display: none;
+
+}
+
+.playback-mode .preview-panel {
+
+  width: 100%;
+
+}
+
+.playback-mode .cinematic-preview {
+
+  max-width: 100%;
+
+  height: 100vh;
+
+  aspect-ratio: auto;
+
+  border-radius: 0;
+
+}
+
+/*
+====================================================
+SCROLLBAR
+====================================================
+*/
+
+::-webkit-scrollbar {
+
+  width: 10px;
+
+}
+
+::-webkit-scrollbar-track {
+
+  background:
+    #11151f;
+
+}
+
+::-webkit-scrollbar-thumb {
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.16
+    );
+
+  border-radius: 20px;
+
+}
+
+/*
+====================================================
+TABLET
+====================================================
+*/
+
+@media (
+  max-width: 1100px
+) {
+
+  .app-main {
+
+    grid-template-columns:
+      1fr;
+
+  }
+
+  .cinematic-preview {
+
+    max-width: 500px;
+
+  }
+
+}
+
+/*
+====================================================
+MOBILE
+====================================================
+*/
+
+@media (
+  max-width: 768px
+) {
+
+  .app-shell {
+
+    padding: 14px;
+
+  }
+
+  .app-title {
+
+    font-size: 1.5rem;
+
+  }
+
+  .editor-panel,
+  .preview-panel {
+
+    padding: 14px;
+
+  }
+
+  .scene-card {
+
+    padding: 14px;
+
+  }
+
+  .cinematic-preview {
+
+    max-width: 100%;
+
+  }
+
+}
