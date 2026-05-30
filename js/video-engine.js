@@ -1,447 +1,377 @@
 /*
-====================================================
-SHORTS / REEL TOOL
+
+SHORTS / REEL CREATOR PRO
 VIDEO ENGINE
+FINAL TIMELINE COMPATIBLE VERSION
 js/video-engine.js
-====================================================
 
-Features:
+Responsibilities
 
-✔ Multi Scene Playback
-✔ 9:16 Vertical Video
-✔ Scene Loading
-✔ Video Metadata Reader
-✔ Effect Integration
-✔ TTS Integration
-✔ Sequential Playback
+✔ Load Video
+✔ Play Video
+✔ Stop Video
+✔ Get Duration
 ✔ Mobile Friendly
+✔ Timeline Compatible
+✔ Canvas Compatible
 
 ====================================================
 */
 
 window.VideoEngine = (() => {
 
-  /*
-  ====================================================
-  INTERNAL STATE
-  ====================================================
-  */
+/*
 
-  let scenes = [];
+INTERNAL STATE
 
-  let voiceMode =
-    "female";
+*/
 
-  let currentSceneIndex =
-    0;
+const video =
+document.createElement(
+"video"
+);
 
-  let isRunning =
-    false;
+let loaded =
+false;
 
-  /*
-  ====================================================
-  VIDEO ELEMENT
-  ====================================================
-  */
+let currentScene =
+null;
 
-  const video =
-    document.createElement(
-      "video"
-    );
+/*
 
-  video.playsInline = true;
+VIDEO CONFIG
 
-  video.muted = true;
+*/
 
-  video.preload = "auto";
+video.preload =
+"auto";
 
-  /*
-  ====================================================
-  START
-  ====================================================
-  */
+video.playsInline =
+true;
 
-  async function start(config) {
+video.muted =
+true;
 
-    scenes =
-      config.scenes || [];
+video.crossOrigin =
+"anonymous";
 
-    voiceMode =
-      config.voiceMode ||
-      "female";
+/*
 
-    if (!scenes.length) {
+LOAD
 
-      console.warn(
-        "No scenes available."
-      );
+*/
 
-      return;
+async function load(scene) {
 
-    }
+if (!scene) {
 
-    isRunning = true;
+  throw new Error(
+    "Scene missing."
+  );
 
-    currentSceneIndex = 0;
+}
 
-    console.log(
-      "Video Engine Started"
-    );
+const url =
+  scene.videoURL ||
+  scene.video ||
+  "";
 
-    await runScenes();
+if (!url) {
 
-  }
+  throw new Error(
+    "Video URL missing."
+  );
 
-  /*
-  ====================================================
-  RUN ALL SCENES
-  ====================================================
-  */
+}
 
-  async function runScenes() {
+currentScene =
+  scene;
 
-    for (
-      let i = 0;
-      i < scenes.length;
-      i++
-    ) {
+loaded =
+  false;
 
-      if (!isRunning) {
-
-        return;
-
-      }
-
-      currentSceneIndex = i;
-
-      const scene =
-        scenes[i];
-
-      await playScene(
-        scene,
-        i
-      );
-
-    }
-
-    await completePlayback();
-
-  }
-
-  /*
-  ====================================================
-  PLAY SINGLE SCENE
-  ====================================================
-  */
-
-  async function playScene(
-    scene,
-    sceneIndex
-  ) {
-
-    console.log(
-      "Playing Scene:",
-      sceneIndex + 1
-    );
-
-    /*
-    ================================================
-    LOAD VIDEO
-    ================================================
-    */
-
-    await loadVideo(
-      scene.videoURL
-    );
-
-    /*
-    ================================================
-    APPLY EFFECT
-    ================================================
-    */
-
-    if (
-      window.EffectsEngine &&
-      typeof window.EffectsEngine
-        .setEffect === "function"
-    ) {
-
-      window.EffectsEngine.setEffect(
-        scene.effect
-      );
-
-    }
-
-    /*
-    ================================================
-    SEND TO CANVAS
-    ================================================
-    */
-
-    if (
-      window.CanvasRecorder &&
-      typeof window.CanvasRecorder
-        .loadVideo === "function"
-    ) {
-
-      await window.CanvasRecorder
-        .loadVideo({
-
-          video,
-
-          sceneIndex
-
-        });
-
-    }
-
-    /*
-    ================================================
-    DISPLAY TEXT
-    ================================================
-    */
-
-    if (
-      window.CanvasRecorder &&
-      typeof window.CanvasRecorder
-        .renderText === "function"
-    ) {
-
-      await window.CanvasRecorder
-        .renderText({
-
-          text:
-            scene.narration
-
-        });
-
-    }
-
-    /*
-    ================================================
-    START VIDEO
-    ================================================
-    */
-
-    await video.play();
-
-    /*
-    ================================================
-    TTS
-    ================================================
-    */
-
-    const ttsPromise =
-      speakNarration(
-        scene.narration
-      );
-
-    /*
-    ================================================
-    WAIT VIDEO END
-    ================================================
-    */
-
-    const videoPromise =
-      waitVideoEnd();
-
-    await Promise.all([
-
-      videoPromise,
-
-      ttsPromise
-
-    ]);
-
-    /*
-    ================================================
-    TRANSITION
-    ================================================
-    */
-
-    if (
-      window.CanvasRecorder &&
-      typeof window.CanvasRecorder
-        .playSceneTransition ===
-        "function"
-    ) {
-
-      await window.CanvasRecorder
-        .playSceneTransition();
-
-    }
-
-  }
-
-  /*
-  ====================================================
-  LOAD VIDEO
-  ====================================================
-  */
-
-  function loadVideo(url) {
-
-    return new Promise((resolve, reject) => {
-
-      video.pause();
-
-      video.src = "";
-
-      video.load();
-
-      video.src = url;
-
-      video.onloadedmetadata =
-        () => {
-
-          resolve();
-
-        };
-
-      video.onerror =
-        reject;
-
-    });
-
-  }
-
-  /*
-  ====================================================
-  WAIT VIDEO END
-  ====================================================
-  */
-
-  function waitVideoEnd() {
-
-    return new Promise((resolve) => {
-
-      video.onended =
-        () => {
-
-          resolve();
-
-        };
-
-    });
-
-  }
-
-  /*
-  ====================================================
-  SPEAK
-  ====================================================
-  */
-
-  async function speakNarration(
-    text
-  ) {
-
-    if (
-      !window.TTSEngine ||
-      typeof window.TTSEngine
-        .speak !== "function"
-    ) {
-
-      return;
-
-    }
-
-    await window.TTSEngine
-      .speak({
-
-        text,
-
-        voiceMode
-
-      });
-
-  }
-
-  /*
-  ====================================================
-  COMPLETE
-  ====================================================
-  */
-
-  async function completePlayback() {
-
-    isRunning = false;
-
-    console.log(
-      "Playback Complete"
-    );
-
-    if (
-      window.CanvasRecorder &&
-      typeof window.CanvasRecorder
-        .finalize === "function"
-    ) {
-
-      await window.CanvasRecorder
-        .finalize();
-
-    }
-
-  }
-
-  /*
-  ====================================================
-  STOP
-  ====================================================
-  */
-
-  function stop() {
-
-    isRunning = false;
+return new Promise(
+  (
+    resolve,
+    reject
+  ) => {
 
     video.pause();
 
-    if (
-      window.TTSEngine &&
-      typeof window.TTSEngine
-        .stop === "function"
-    ) {
+    video.removeAttribute(
+      "src"
+    );
 
-      window.TTSEngine.stop();
+    video.load();
 
-    }
+    video.onloadedmetadata =
+      async () => {
+
+        loaded =
+          true;
+
+        try {
+
+          if (
+            window.CanvasRecorder &&
+            typeof window
+              .CanvasRecorder
+              .loadVideo ===
+              "function"
+          ) {
+
+            await window
+              .CanvasRecorder
+              .loadVideo({
+
+                video
+
+              });
+
+          }
+
+        }
+
+        catch (
+          error
+        ) {
+
+          console.warn(
+            error
+          );
+
+        }
+
+        resolve();
+
+      };
+
+    video.onerror =
+      reject;
+
+    video.src =
+      url;
 
   }
+);
 
-  /*
-  ====================================================
-  GETTERS
-  ====================================================
-  */
+}
 
-  function getCurrentScene() {
+/*
 
-    return currentSceneIndex;
+PLAY
+
+*/
+
+async function play() {
+
+if (!loaded) {
+
+  return;
+
+}
+
+try {
+
+  await video.play();
+
+  await waitVideoEnd();
+
+}
+
+catch (error) {
+
+  console.warn(
+    error
+  );
+
+}
+
+}
+
+/*
+
+WAIT VIDEO END
+
+*/
+
+function waitVideoEnd() {
+
+return new Promise(
+  (resolve) => {
+
+    video.onended =
+      () => {
+
+        resolve();
+
+      };
 
   }
+);
 
-  function isPlaying() {
+}
 
-    return isRunning;
+/*
 
-  }
+PAUSE
 
-  /*
-  ====================================================
-  PUBLIC API
-  ====================================================
-  */
+*/
 
-  return {
+function pause() {
 
-    start,
+try {
 
-    stop,
+  video.pause();
 
-    isPlaying,
+}
 
-    getCurrentScene
+catch (error) {
 
-  };
+  console.warn(
+    error
+  );
+
+}
+
+}
+
+/*
+
+STOP
+
+*/
+
+function stop() {
+
+try {
+
+  video.pause();
+
+  video.currentTime =
+    0;
+
+}
+
+catch (error) {
+
+  console.warn(
+    error
+  );
+
+}
+
+}
+
+/*
+
+DURATION
+
+*/
+
+function getDuration() {
+
+return (
+  video.duration ||
+  0
+);
+
+}
+
+/*
+
+CURRENT TIME
+
+*/
+
+function getCurrentTime() {
+
+return (
+  video.currentTime ||
+  0
+);
+
+}
+
+/*
+
+VIDEO ELEMENT
+
+*/
+
+function getVideo() {
+
+return video;
+
+}
+
+/*
+
+IS PLAYING
+
+*/
+
+function isPlaying() {
+
+return (
+  !video.paused &&
+  !video.ended
+);
+
+}
+
+/*
+
+IS LOADED
+
+*/
+
+function isLoaded() {
+
+return loaded;
+
+}
+
+/*
+
+CURRENT SCENE
+
+*/
+
+function getCurrentScene() {
+
+return currentScene;
+
+}
+
+/*
+
+PUBLIC API
+
+*/
+
+return {
+
+load,
+
+play,
+
+pause,
+
+stop,
+
+getVideo,
+
+getDuration,
+
+getCurrentTime,
+
+getCurrentScene,
+
+isLoaded,
+
+isPlaying
+
+};
 
 })();
