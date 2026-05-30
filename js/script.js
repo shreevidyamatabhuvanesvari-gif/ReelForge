@@ -1,21 +1,24 @@
 /*
 ====================================================
-SHORTS / REEL TOOL
-MAIN APPLICATION CONTROLLER
+SHORTS / REEL CREATOR PRO
+FINAL INTEGRATED APP CONTROLLER
 js/script.js
 ====================================================
 
-Features:
+Architecture
 
-✔ Scene Management
-✔ Video Selection
-✔ Narration Writing
-✔ Effect Selection
-✔ Voice Selection
-✔ Playback Validation
-✔ Engine Coordination
-✔ Mobile Friendly
-✔ Multi Scene Support
+script.js
+   ↓
+TimelineEngine
+   ↓
+VideoEngine
+TTSEngine
+SubtitleEngine
+EffectsEngine
+   ↓
+CanvasRecorder
+   ↓
+ExportEngine
 
 ====================================================
 */
@@ -38,7 +41,7 @@ Features:
 
   /*
   ====================================================
-  DOM REFERENCES
+  DOM
   ====================================================
   */
 
@@ -57,9 +60,24 @@ Features:
       "playBtn"
     );
 
-  const voiceSelect =
+  const stopBtn =
     document.getElementById(
-      "voiceSelect"
+      "stopBtn"
+    );
+
+  const exportBtn =
+    document.getElementById(
+      "exportBtn"
+    );
+
+  const renderCanvas =
+    document.getElementById(
+      "renderCanvas"
+    );
+
+  const cinematicPreview =
+    document.getElementById(
+      "cinematicPreview"
     );
 
   /*
@@ -90,36 +108,38 @@ Features:
     syncScenes();
 
     console.log(
-      "Shorts / Reel Tool Ready"
+      "Shorts / Reel Creator Pro Ready"
     );
 
   }
 
   /*
   ====================================================
-  GLOBAL EVENTS
+  EVENTS
   ====================================================
   */
 
   function bindGlobalEvents() {
 
-    if (addSceneBtn) {
+    addSceneBtn?.addEventListener(
+      "click",
+      addScene
+    );
 
-      addSceneBtn.addEventListener(
-        "click",
-        addScene
-      );
+    playBtn?.addEventListener(
+      "click",
+      startPlayback
+    );
 
-    }
+    stopBtn?.addEventListener(
+      "click",
+      stopPlayback
+    );
 
-    if (playBtn) {
-
-      playBtn.addEventListener(
-        "click",
-        startPlayback
-      );
-
-    }
+    exportBtn?.addEventListener(
+      "click",
+      exportVideo
+    );
 
   }
 
@@ -131,7 +151,7 @@ Features:
 
   function addScene() {
 
-    const sceneNumber =
+    const count =
       sceneContainer.children.length + 1;
 
     const card =
@@ -144,36 +164,36 @@ Features:
 
     card.innerHTML = `
 
-      <div class="scene-header">
+      <div class="scene-topbar">
 
-        <h3>
-          Scene ${sceneNumber}
-        </h3>
+        <div class="scene-title">
+          Scene ${count}
+        </div>
 
         <button
           type="button"
-          class="remove-scene-btn"
+          class="scene-remove-btn"
         >
           Remove
         </button>
 
       </div>
 
-      <div class="field-group">
+      <div class="scene-field">
 
         <label>
-          Video Clip
+          Upload Video
         </label>
 
         <input
           type="file"
           accept="video/*"
           class="scene-video-input"
-        >
+        />
 
       </div>
 
-      <div class="field-group">
+      <div class="scene-field">
 
         <label>
           Narration
@@ -181,13 +201,34 @@ Features:
 
         <textarea
           class="scene-text-input"
-          rows="5"
-          placeholder="अपना लेख लिखें..."
+          placeholder="लेख लिखें..."
         ></textarea>
 
       </div>
 
-      <div class="field-group">
+      <div class="scene-field">
+
+        <label>
+          Voice
+        </label>
+
+        <select
+          class="scene-voice-select"
+        >
+
+          <option value="female">
+            Indian Female
+          </option>
+
+          <option value="male">
+            Indian Male
+          </option>
+
+        </select>
+
+      </div>
+
+      <div class="scene-field">
 
         <label>
           Effect
@@ -202,7 +243,7 @@ Features:
           </option>
 
           <option value="flowers">
-            Flowers Rain
+            Flower Rain
           </option>
 
           <option value="snow">
@@ -241,61 +282,53 @@ Features:
 
   function bindSceneEvents(scene) {
 
-    const videoInput =
-      scene.querySelector(
+    scene
+      .querySelector(
         ".scene-video-input"
-      );
-
-    const textInput =
-      scene.querySelector(
-        ".scene-text-input"
-      );
-
-    const effectSelect =
-      scene.querySelector(
-        ".scene-effect-select"
-      );
-
-    const removeBtn =
-      scene.querySelector(
-        ".remove-scene-btn"
-      );
-
-    if (videoInput) {
-
-      videoInput.addEventListener(
+      )
+      ?.addEventListener(
         "change",
         syncScenes
       );
 
-    }
-
-    if (textInput) {
-
-      textInput.addEventListener(
+    scene
+      .querySelector(
+        ".scene-text-input"
+      )
+      ?.addEventListener(
         "input",
         syncScenes
       );
 
-    }
-
-    if (effectSelect) {
-
-      effectSelect.addEventListener(
+    scene
+      .querySelector(
+        ".scene-effect-select"
+      )
+      ?.addEventListener(
         "change",
         syncScenes
       );
 
-    }
+    scene
+      .querySelector(
+        ".scene-voice-select"
+      )
+      ?.addEventListener(
+        "change",
+        syncScenes
+      );
 
-    if (removeBtn) {
-
-      removeBtn.addEventListener(
+    scene
+      .querySelector(
+        ".scene-remove-btn"
+      )
+      ?.addEventListener(
         "click",
         () => {
 
           if (
-            sceneContainer.children.length <= 1
+            sceneContainer
+              .children.length <= 1
           ) {
 
             alert(
@@ -314,8 +347,6 @@ Features:
 
         }
       );
-
-    }
 
   }
 
@@ -336,7 +367,9 @@ Features:
       (card, index) => {
 
         const title =
-          card.querySelector("h3");
+          card.querySelector(
+            ".scene-title"
+          );
 
         if (title) {
 
@@ -352,7 +385,7 @@ Features:
 
   /*
   ====================================================
-  SYNC SCENES
+  SYNC
   ====================================================
   */
 
@@ -367,23 +400,10 @@ Features:
 
     cards.forEach((card) => {
 
-      const videoInput =
+      const file =
         card.querySelector(
           ".scene-video-input"
-        );
-
-      const textInput =
-        card.querySelector(
-          ".scene-text-input"
-        );
-
-      const effectSelect =
-        card.querySelector(
-          ".scene-effect-select"
-        );
-
-      const file =
-        videoInput?.files?.[0];
+        )?.files?.[0];
 
       AppState.scenes.push({
 
@@ -394,11 +414,20 @@ Features:
             ? URL.createObjectURL(file)
             : "",
 
-        narration:
-          textInput?.value.trim() || "",
+        text:
+          card.querySelector(
+            ".scene-text-input"
+          )?.value.trim() || "",
+
+        voice:
+          card.querySelector(
+            ".scene-voice-select"
+          )?.value || "female",
 
         effect:
-          effectSelect?.value || "none"
+          card.querySelector(
+            ".scene-effect-select"
+          )?.value || "none"
 
       });
 
@@ -414,19 +443,10 @@ Features:
 
   function validateScenes() {
 
-    if (
-      !AppState.scenes.length
+    for (
+      const scene
+      of AppState.scenes
     ) {
-
-      alert(
-        "कोई Scene उपलब्ध नहीं है।"
-      );
-
-      return false;
-
-    }
-
-    for (const scene of AppState.scenes) {
 
       if (!scene.video) {
 
@@ -438,7 +458,7 @@ Features:
 
       }
 
-      if (!scene.narration) {
+      if (!scene.text) {
 
         alert(
           "हर Scene में Narration आवश्यक है।"
@@ -456,7 +476,7 @@ Features:
 
   /*
   ====================================================
-  START PLAYBACK
+  PLAYBACK
   ====================================================
   */
 
@@ -476,36 +496,49 @@ Features:
 
     }
 
-    AppState.isPlaying = true;
-
     try {
 
-      /*
-      ================================================
-      VIDEO ENGINE
-      ================================================
-      */
+      AppState.isPlaying = true;
 
-      if (
-        window.VideoEngine &&
-        typeof window.VideoEngine.start ===
-          "function"
-      ) {
+      await window.CanvasRecorder
+        .initialize({
 
-        await window.VideoEngine.start({
+          canvas:
+            renderCanvas,
 
-          scenes:
-            AppState.scenes,
-
-          voiceMode:
-            voiceSelect?.value ||
-            "female"
+          previewElement:
+            cinematicPreview
 
         });
 
+      await window.CanvasRecorder
+        .startRecording();
+
+      await window.TimelineEngine
+        .start({
+
+          scenes:
+            AppState.scenes
+
+        });
+
+      const blob =
+        await window.CanvasRecorder
+          .stopRecording();
+
+      if (
+        blob &&
+        window.ExportEngine
+      ) {
+
+        window.ExportEngine
+          .setBlob(blob);
+
       }
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.error(error);
 
@@ -513,11 +546,68 @@ Features:
         "Playback Failed"
       );
 
-    } finally {
+    }
 
-      AppState.isPlaying = false;
+    finally {
+
+      AppState.isPlaying =
+        false;
 
     }
+
+  }
+
+  /*
+  ====================================================
+  STOP
+  ====================================================
+  */
+
+  function stopPlayback() {
+
+    if (
+      window.TimelineEngine
+    ) {
+
+      window.TimelineEngine.stop();
+
+    }
+
+    AppState.isPlaying =
+      false;
+
+  }
+
+  /*
+  ====================================================
+  EXPORT
+  ====================================================
+  */
+
+  async function exportVideo() {
+
+    if (
+      !window.ExportEngine
+    ) {
+
+      return;
+
+    }
+
+    if (
+      !window.ExportEngine.hasExport()
+    ) {
+
+      alert(
+        "पहले Reel Generate करें।"
+      );
+
+      return;
+
+    }
+
+    window.ExportEngine
+      .download();
 
   }
 
